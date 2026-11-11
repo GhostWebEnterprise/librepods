@@ -1,4 +1,30 @@
+## Android 15 / OxygenOS 15 device notes
+
+### OnePlus Nord CE 3 Lite 5G
+
+Android 15 (API 35) on OxygenOS 15 is **not currently a confirmed rootless configuration** for LibrePods. The app's rootless-device allowlist intentionally does not classify Android 15 OnePlus builds as supported. Do not enable the device-check bypass as a substitute for Bluetooth compatibility.
+
+For AirPods control on this configuration, the expected workaround is a compatible root solution with LSPosed (or a compatible Xposed implementation), subject to device- and ROM-specific testing:
+
+1. Install the FOSS GitHub release build, not the Play Store build, when using the Xposed integration.
+2. Install and activate a compatible LSPosed implementation for the device's Android 15/OxygenOS 15 build.
+3. Enable the LibrePods module in LSPosed.
+4. Set the module scope to **System Bluetooth** (`com.android.bluetooth`), not only the LibrePods app.
+5. Reboot after changing the scope.
+6. Confirm that the hook loads in the Bluetooth process before testing AirPods pairing and controls.
+
+LSPosed is a compatibility workaround, not a guarantee. VendorID-hook features and privileged system integrations may still require root or the optional system-app module. Bluetooth L2CAP behavior, ANC controls, ear detection, and battery reporting must be tested separately on the target device.
+
+| Target | Expected status before device testing |
+|---|---|
+| Android 15 / OxygenOS 15, OnePlus Nord CE 3 Lite 5G | LSPosed/root path to be validated |
+| Android 15 without root/Xposed | Not confirmed; do not advertise as supported |
+| OxygenOS 16+ rootless path | Follow upstream's currently documented device/OS support |
+
+This note records the target test configuration; it does not claim that a working APK or device validation has been completed.
+
 ## Root Requirement
+
 
 LibrePods *may* require root depending on your device/OS and what features you want access to:
 
