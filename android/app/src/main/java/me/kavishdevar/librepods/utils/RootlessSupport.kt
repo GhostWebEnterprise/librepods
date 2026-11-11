@@ -22,21 +22,38 @@ import android.content.SharedPreferences
 import android.os.Build
 import androidx.core.content.edit
 
-fun isSupported(sharedPreferences: SharedPreferences): Boolean {
-    if (Build.VERSION.SDK_INT >= 37) return true
+fun isSupported(sharedPreferences: SharedPreferences): Boolean =
+    isRootlessSupported(
+        sdkInt = Build.VERSION.SDK_INT,
+        buildId = Build.ID,
+        manufacturer = Build.MANUFACTURER,
+        bypassDeviceCheck = sharedPreferences.getBoolean("bypass_device_check.v2", false)
+    )
 
-    val isBypassFlagActive = sharedPreferences.getBoolean("bypass_device_check.v2", false)
-    if (isBypassFlagActive) return true
+/**
+ * Pure device-policy check so the rootless allowlist can be unit tested.
+ *
+ * Android 15 (API 35) OnePlus devices deliberately remain outside the rootless
+ * allowlist; they must use the documented Xposed/LSPosed Bluetooth workaround.
+ */
+internal fun isRootlessSupported(
+    sdkInt: Int,
+    buildId: String,
+    manufacturer: String,
+    bypassDeviceCheck: Boolean
+): Boolean {
+    if (sdkInt >= 37) return true
+    if (bypassDeviceCheck) return true
 
-    val isPixel = Build.MANUFACTURER.lowercase() == "google"
-    val isOppoFamily = Build.MANUFACTURER.lowercase() in listOf("oneplus", "oppo", "realme")
+    val normalizedManufacturer = manufacturer.lowercase()
+    val isPixel = normalizedManufacturer == "google"
+    val isOppoFamily = normalizedManufacturer in listOf("oneplus", "oppo", "realme")
 
-    if (isPixel && Build.VERSION.SDK_INT == 36) {
-        return Build.ID.startsWith("CP1A")
-    } else if (isOppoFamily) {
-        return Build.VERSION.SDK_INT >= 36
+    return when {
+        isPixel && sdkInt == 36 -> buildId.startsWith("CP1A")
+        isOppoFamily -> sdkInt >= 36
+        else -> false
     }
-    return false
 }
 
 fun bypassDeviceCheck(sharedPreferences: SharedPreferences) {
